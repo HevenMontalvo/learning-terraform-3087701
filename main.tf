@@ -47,10 +47,10 @@ resource "aws_security_group" "blog_http_in" {
 }
 
 resource "aws_security_group" "blog_https_in" {
-  type = "ingress"
+  type      = "ingress"
   from_port = 443
-  to_port = 443
-  protoclo = "tcp"
+  to_port   = 443
+  protoclo  = "tcp"
   cidr_blocks = ["0.0.0.0/0"]
 
   security_group_id = aws_security_group.blog.id
