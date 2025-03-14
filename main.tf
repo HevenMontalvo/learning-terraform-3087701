@@ -71,6 +71,7 @@ module "alb" {
   subnets         = module.blog_vpc.public_subnets
   security_groups = [module.blog_sg.security_group_id]
 
+  # Configuración del grupo de destino
   target_groups = {
     ex-instance = {
       name_prefix = "blog-"
@@ -80,6 +81,7 @@ module "alb" {
     }
   }
 
+  # Configuración del listener
   listeners = {
     http = {
       port     = 80
@@ -87,7 +89,7 @@ module "alb" {
 
       default_action = {
         type             = "forward"
-        target_group_arn = module.alb.target_groups["ex-instance"].arn
+        target_group_key = "ex-instance"  # Referencia al grupo de destino
       }
     }
   }
