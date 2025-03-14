@@ -1,3 +1,4 @@
+# Data Sources
 data "aws_ami" "app_ami" {
   most_recent = true
 
@@ -18,6 +19,7 @@ data "aws_vpc" "default" {
   default = true
 }
 
+# Módulo VPC
 module "blog_vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -33,17 +35,19 @@ module "blog_vpc" {
   }
 }
 
+# Recurso EC2
 resource "aws_instance" "blog" {
-  ami                  = data.aws_ami.app_ami.id
-  instance_type        = var.instance_type
+  ami                    = data.aws_ami.app_ami.id
+  instance_type          = var.instance_type
   vpc_security_group_ids = [module.blog_sg.security_group_id]
-  subnet_id            = module.blog_vpc.public_subnets[0]
+  subnet_id              = module.blog_vpc.public_subnets[0]
 
   tags = {
     Name = "Learning Terraform"
   }
 }
 
+# Módulo Security Group
 module "blog_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "5.3.0"
@@ -58,25 +62,14 @@ module "blog_sg" {
   egress_cidr_blocks = ["0.0.0.0/0"]
 }
 
+# Módulo ALB
 module "alb" {
   source = "terraform-aws-modules/alb/aws"
 
   name            = "blog-alb"
   vpc_id          = module.blog_vpc.vpc_id
   subnets         = module.blog_vpc.public_subnets
-  security_groups = [module.blog_sg.security_group_id]  
-
-  listeners = {
-    http = {
-      port     = 80
-      protocol = "HTTP"
-
-      default_action = [{
-        type           = "forward"
-        target_group_arn = module.alb.target_groups["ex-instance"].arn
-      }]
-    }
-  }
+  security_groups = [module.blog_sg.security_group_id]
 
   target_groups = {
     ex-instance = {
@@ -87,14 +80,27 @@ module "alb" {
     }
   }
 
+  listeners = {
+    http = {
+      port     = 80
+      protocol = "HTTP"
+
+      default_action = {
+        type             = "forward"
+        target_group_arn = module.alb.target_groups["ex-instance"].arn
+      }
+    }
+  }
+
   tags = {
     Environment = "Development"
     Project     = "Example"
   }
 }
 
+# Recurso Target Group Attachment
 resource "aws_lb_target_group_attachment" "blog" {
   target_group_arn = module.alb.target_groups["ex-instance"].arn
   target_id        = aws_instance.blog.id
-  port            = 80
+  port             = 80
 }
