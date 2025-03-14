@@ -64,7 +64,7 @@ module "alb" {
   name            = "blog-alb"
   vpc_id          = module.blog_vpc.vpc_id
   subnets         = module.blog_vpc.public_subnets
-  security_groups = [module.blog_sg.security_group_id]  # 🔹 Se corrigió para que sea una lista
+  security_groups = [module.blog_sg.security_group_id]  
 
   listeners = {
     http = {
@@ -73,7 +73,7 @@ module "alb" {
 
       default_action = [{
         type             = "forward"
-        target_group_arn = module.alb.target_groups["ex-instance"].arn  # 🔹 Corrección aquí
+        target_group_key = "ex-instance"
       }]
     }
   }
@@ -84,12 +84,6 @@ module "alb" {
       protocol    = "HTTP"
       port        = 80
       target_type = "instance"
-      targets = [
-        {
-          target_id = aws_instance.blog.id
-          port      = 80
-        }
-      ]
     }
   }
 
@@ -97,4 +91,10 @@ module "alb" {
     Environment = "Development"
     Project     = "Example"
   }
+}
+
+resource "aws_lb_target_group_attachment" "blog" {
+  target_group_arn = module.alb.target_groups["ex-instance"].arn
+  target_id        = aws_instance.blog.id
+  port            = 80
 }
