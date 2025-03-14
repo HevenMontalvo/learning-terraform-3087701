@@ -24,8 +24,8 @@ module "blog_vpc" {
   name = "dev"
   cidr = "10.0.0.0/16"
 
-  azs             = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  azs            = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  public_subnets = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 
   tags = {
     Terraform   = "true"
@@ -71,10 +71,10 @@ module "alb" {
       port     = 80
       protocol = "HTTP"
 
-      default_action = {
+      default_action = [{
         type             = "forward"
         target_group_arn = module.alb.target_groups["ex-instance"].arn  # 🔹 Corrección aquí
-      }
+      }]
     }
   }
 
@@ -84,6 +84,12 @@ module "alb" {
       protocol    = "HTTP"
       port        = 80
       target_type = "instance"
+      targets = [
+        {
+          target_id = aws_instance.blog.id
+          port      = 80
+        }
+      ]
     }
   }
 
@@ -91,9 +97,4 @@ module "alb" {
     Environment = "Development"
     Project     = "Example"
   }
-}
-
-resource "aws_lb_target_group_attachment" "blog" {
-  target_group_arn = module.alb.target_groups["ex-instance"].arn
-  target_id        = aws_instance.blog.id
 }
