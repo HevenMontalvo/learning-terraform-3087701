@@ -29,6 +29,17 @@ module "blog_vpc" {
   }
 }
 
+resource "aws_instance" "blog" {
+  app_ami       = data.aws_ami.app_ami.id
+  instance_type = [module.blog_sg.security_group_id]
+
+  subnet_id               = module.blog_vpc.public_subnets[0]
+  vpc_security_groups_ids = [module.blog_sg.security_group_id]
+
+  tags = {
+    Name = "HelloWorld"
+  }
+}
 
 module "blog_autoscaling" {
   source  = "terraform-aws-modules/autoscaling/aws"
